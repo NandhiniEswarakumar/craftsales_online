@@ -1,0 +1,51 @@
+.navbar {
+  background: linear-gradient(90deg, #a85d1a 0%, #e07a5f 100%);
+  color: #fff;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+.navbar__brand a {
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.7rem;
+  text-decoration: none;
+}
+.navbar__links {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+}
+.navbar__links li a,
+.navbar__links li .nav-link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.navbar__links li a:hover,
+.navbar__links li .nav-link:hover {
+  color: #ffd6a0;
+}
+.nav-link.active {
+  color: #ffd6a0;
+  font-weight: bold;
+  border-bottom: 2px solid #ffd6a0;
+  /* You can adjust the highlight style as you like */
+}
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  .navbar__links {
+    flex-direction: column;
+    gap: 0.7rem;
+    width: 100%;
+  }
+}

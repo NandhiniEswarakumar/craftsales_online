@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "Handmade Beaded Necklace",
+    "image": "../assets/images/jewelry.jpg",
+    "price": 25.99
+  },
+  {
+    "id": 2,
+    "title": "Abstract Canvas Painting",
+    "image": "../assets/images/painting.jpg",
+    "price": 45.00
+  },
+  {
+    "id": 3,
+    "title": "Ceramic Pottery Vase",
+    "image": "../assets/images/pottery.jpg",
+    "price": 32.50
+  },
+  {
+    "id": 4,
+    "title": "Knitted Wool Scarf",
+    "image": "../assets/images/knitted.jpg",
+    "price": 18.75
+  },
+  {
+    "id": 5,
+    "title": "Handcrafted Wooden Box",
+    "image": "../assets/images/wooden_box.jpg",
+    "price": 29.99
+  }
+]

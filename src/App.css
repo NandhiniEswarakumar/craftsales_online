@@ -1,0 +1,74 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  min-height: 100vh;
+  color: #7b5e57;
+  background: linear-gradient(120deg, #f8f4f0 0%, #ffe0c3 50%, #e7bba3 100%);
+  background-size: 200% 200%;
+  animation: bgMove 8s ease-in-out infinite alternate;
+}
+
+@keyframes bgMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+main {
+  min-height: 70vh;
+  padding-bottom: 2rem;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button, input {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f8f4f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #e7bba3;
+  border-radius: 8px;
+}
+
+/* App.css */
+.logout-btn {
+  background-color: #e74c3c; /* Red */
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #c0392b;
+}
+.username-highlight {
+  color: #e67e22;      /* Orange highlight */
+  font-weight: bold;
+  background: #fff3e0; /* Light background for extra highlight */
+  padding: 6px 8px;
+  border-radius: 10px;
+  margin-left: 4px;
+  font-size: large;
+}
+.welcome-msg {
+  font-size: 1.3rem;
+  color: #333;
+  font-weight: 1000;
+  bottom: 20px;
+  
+}
