@@ -6,5 +6,4 @@ router.post('/', async (req, res) => {
   // You can save to DB or send an email here
   res.json({ success: true, msg: 'Message received!' });
 });
-
 module.exports = router;

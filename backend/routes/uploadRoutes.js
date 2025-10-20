@@ -61,5 +61,4 @@ router.post('/image', upload.single('image'), (req, res) => {
     res.status(500).json({ message: 'Failed to upload image' });
   } 
 });
-
 module.exports = router;

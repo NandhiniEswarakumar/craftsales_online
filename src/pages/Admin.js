@@ -210,15 +210,10 @@ const AdminPanel = () => {
       loadUsers(1, searchTerm, verificationFilter, adminFilter);
       setCurrentPage(1);
     }
-  }, [verificationFilter, adminFilter, activeTab]);
+  }, [verificationFilter, adminFilter, activeTab, searchTerm]);
 
-  // Update users when search term changes
-  useEffect(() => {
-    if (activeTab === 'users') {
-      loadUsers(1, searchTerm, verificationFilter, adminFilter);
-      setCurrentPage(1);
-    }
-  }, [searchTerm]);
+  // Note: Search term is already handled in the effect above via its dependency array.
+  // Removed a redundant useEffect that only depended on searchTerm to avoid missing-deps warning.
 
 
   return (

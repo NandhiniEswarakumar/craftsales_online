@@ -1,7 +1,8 @@
-  import React, { useState, useEffect } from 'react';
-  import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import './Seller.css';
 import productNames from '../data/productNames';
+import resolveImageUrl from '../utils/imageUtils';
 
   // Set the base URL for axios
   const API_BASE = 'http://localhost:5001';
@@ -35,19 +36,10 @@ import productNames from '../data/productNames';
     };
 
     // Fetch seller data
-    useEffect(() => {
-      if (user && user.id) {
-        debugLog('User found:', user);
-        fetchProducts();
-        fetchStats();
-      }
-    }, [user]);
-
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
       try {
         setLoading(true);
         debugLog('Fetching products for user ID:', user.id);
-        
         const response = await axios.get(`${API_BASE}/api/seller/products/${user.id}`);
         debugLog('Products response:', response.data);
         setProducts(response.data);
@@ -57,9 +49,9 @@ import productNames from '../data/productNames';
       } finally {
         setLoading(false);
       }
-    };
+    }, [user?.id]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
       try {
         debugLog('Fetching stats for user ID:', user.id);
         const response = await axios.get(`${API_BASE}/api/seller/dashboard/${user.id}`);
@@ -69,7 +61,15 @@ import productNames from '../data/productNames';
         debugLog('Error fetching stats:', error);
         console.error('Error fetching stats:', error);
       }
-    };
+    }, [user?.id]);
+
+    useEffect(() => {
+      if (user && user.id) {
+        debugLog('User found:', user);
+        fetchProducts();
+        fetchStats();
+      }
+    }, [user, fetchProducts, fetchStats]);
 
     // Export products to CSV
     const exportToCSV = () => {
@@ -482,8 +482,12 @@ import productNames from '../data/productNames';
                 products
                   .filter(p => !search || p.title.toLowerCase().includes(search.toLowerCase()))
                   .map(product => (
-                  <div key={product._id} className="product-card" style={{borderColor: (product.stock <= lowStockThreshold ? '#dc3545' : undefined)}}>
-                    <img src={product.image} alt={product.title} />
+                  <div key={product._id} className="product-card">
+                    <img
+                      src={resolveImageUrl(product.image)}
+                      alt={product.title}
+                      onError={(e) => { e.currentTarget.src = `${process.env.PUBLIC_URL}/fallback.png`; }}
+                    />
                     <div className="product-info">
                       <h4>{product.title}</h4>
                       <div style={{display:'flex', gap:'6px', alignItems:'center'}}>

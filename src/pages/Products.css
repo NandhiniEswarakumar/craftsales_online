@@ -39,7 +39,9 @@
   margin-top: 8px;
 }
 
-.wishlist-btn, .save-later-btn {
+/* Removed .save-later-btn (save-for-later UI removed) */
+/* Keep other button styles as-is */
+.wishlist-btn { /* optional: keep or remove if unused */
   border: 1px solid #e7c29b;
   background: #fff7ef;
   color: #7a4a1f;
@@ -48,8 +50,6 @@
   font-size: 0.85rem;
   cursor: pointer;
 }
-
-.wishlist-btn.active { background: #ffe0cc; }
 
 .rating {
   display: flex;

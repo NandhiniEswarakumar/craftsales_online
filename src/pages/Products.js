@@ -541,18 +541,25 @@ const products = [
 function Products({ onAddToCart }) {
   const [addedId, setAddedId] = useState(null);
   const [selectedName, setSelectedName] = useState(null);
+  // reviews stored as { [productId]: [ {rating,text,at}, ... ] }
+  const [reviews, setReviews] = useState(() => JSON.parse(localStorage.getItem('reviews') || '{}'));
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const productRefs = useRef(products.map(() => React.createRef()));
-  const [savedForLater, setSavedForLater] = useState(() => new Set(JSON.parse(localStorage.getItem('savedForLater') || '[]')));
-  const [reviews, setReviews] = useState(() => JSON.parse(localStorage.getItem('reviews') || '{}')); // { productId: [{rating, text}] }
-  const [showSavedOnly, setShowSavedOnly] = useState(false);
   const navigate = useNavigate();
 
   const handleAddToCart = (product) => {
     setAddedId(product.id);
+    // persist cart in localStorage
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (!cart.find(i => i.id === product.id)) {
+      cart.push({ id: product.id, name: product.name, price: product.price, image: product.images && product.images[0] });
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
     if (onAddToCart) {
       onAddToCart({
         ...product,
-        image: product.images[0], // Ensure image is passed to cart
+        image: product.images && product.images[0],
       });
     }
     setTimeout(() => setAddedId(null), 1200);
@@ -562,31 +569,13 @@ function Products({ onAddToCart }) {
     setSelectedName(name); // Filter by name
   };
 
-  const toggleSaveForLater = (productId) => {
-    const next = new Set(savedForLater);
-    const isSaving = !next.has(productId);
-    if (isSaving) next.add(productId); else next.delete(productId);
-    setSavedForLater(next);
-    localStorage.setItem('savedForLater', JSON.stringify(Array.from(next)));
-
-    // Keep minimal product info for Cart display
-    const data = JSON.parse(localStorage.getItem('savedItemsData') || '{}');
-    if (isSaving) {
-      const prod = products.find(p => p.id === productId);
-      if (prod) {
-        data[productId] = { id: prod.id, name: prod.name, price: prod.price, image: prod.images[0] };
-      }
-    } else {
-      delete data[productId];
-    }
-    localStorage.setItem('savedItemsData', JSON.stringify(data));
-  };
-
   const addReview = (productId, rating, text) => {
-    const existing = reviews[productId] || [];
-    const next = { ...reviews, [productId]: [...existing, { rating, text, at: Date.now() }] };
-    setReviews(next);
-    localStorage.setItem('reviews', JSON.stringify(next));
+    setReviews(prev => {
+      const existing = prev[productId] || [];
+      const next = { ...prev, [productId]: [...existing, { rating, text, at: Date.now() }] };
+      localStorage.setItem('reviews', JSON.stringify(next));
+      return next;
+    });
   };
 
   const averageRating = (productId) => {
@@ -600,11 +589,9 @@ function Products({ onAddToCart }) {
     navigate('/payment');
   };
 
-  const displayedProducts = (
-    selectedName === null
-      ? products
-      : products.filter(product => product.name === selectedName)
-  ).filter(p => (showSavedOnly ? savedForLater.has(p.id) : true));
+  const displayedProducts = selectedName === null
+    ? products
+    : products.filter(product => product.name === selectedName);
 
   return (
     <div className="products-container">
@@ -623,11 +610,6 @@ function Products({ onAddToCart }) {
               Show All
             </button>
           </li>
-          <li style={{marginTop: '8px'}}>
-            <button onClick={() => setShowSavedOnly(v => !v)} style={{ color: showSavedOnly ? '#0a7d27' : '#7b5e57', fontWeight: 600 }}>
-              {showSavedOnly ? 'Showing: Saved for later' : 'Show Saved for later'}
-            </button>
-          </li>
         </ul>
       </aside>
       <div className="product-list">
@@ -637,8 +619,13 @@ function Products({ onAddToCart }) {
               src={product.images[0]}
               alt={product.name}
               className="product-image"
+              onClick={() => { setSelectedProduct(product); setModalOpen(true); }}
             />
-            <h3>{product.name}</h3>
+            <h3
+              onClick={() => { setSelectedProduct(product); setModalOpen(true); }}
+            >
+              {product.name}
+            </h3>
             <div className="rating" title={`Average rating ${averageRating(product.id)}`}>
               {[1,2,3,4,5].map(star => (
                 <span key={star} className="star">{averageRating(product.id) >= star ? '★' : '☆'}</span>
@@ -646,46 +633,93 @@ function Products({ onAddToCart }) {
               <span style={{marginLeft:6, fontSize:'0.85rem', color:'#555'}}>({averageRating(product.id)})</span>
             </div>
             <p>₹{product.price}</p>
-            <button
-              className={`add-to-cart-btn`}
-              onClick={() => handleBuyNow(product)}
-            >
-              Buy Now
-            </button>
-            <div className="product-actions">
-              <button className="save-later-btn" onClick={() => toggleSaveForLater(product.id)}>
-                {savedForLater.has(product.id) ? 'Saved' : 'Save for later'}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button
+                className="add-to-cart-btn buy-now"
+                onClick={() => handleBuyNow(product)}
+              >
+                Buy Now
+              </button>
+              <button
+                className="add-to-cart-btn add-to-cart"
+                onClick={() => handleAddToCart(product)}
+              >
+                {addedId === product.id ? 'Added' : 'Add to Cart'}
               </button>
             </div>
-            <div className="reviews">
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const rating = Number(formData.get('rating')) || 5;
-                const text = String(formData.get('text') || '').trim();
-                if (!text) return;
-                addReview(product.id, rating, text);
-                e.currentTarget.reset();
-              }}>
-                <div className="rating">
-                  <select name="rating" defaultValue={5} style={{border:'1px solid #eee', borderRadius:6, padding:'4px 6px'}}>
-                    {[5,4,3,2,1].map(r => <option key={r} value={r}>{r} ★</option>)}
-                  </select>
-                </div>
-                <textarea name="text" placeholder="Write a review (will be saved locally)" />
-                <button type="submit" className="add-to-cart-btn" style={{marginTop:8}}>Submit Review</button>
-              </form>
-              <div className="review-list">
-                {(reviews[product.id] || []).slice().reverse().slice(0,3).map((r, i) => (
-                  <div key={i}>
-                    {'★'.repeat(r.rating)}{'☆'.repeat(5-r.rating)} - {r.text}
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* reviews removed from card — tap product to open modal and see all reviews */}
           </div>
         ))}
       </div>
+
+      {/* Product details modal */}
+      {modalOpen && selectedProduct && (
+        <div className="ps-modal-overlay" onClick={() => setModalOpen(false)} style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999
+        }}>
+          <div className="ps-modal" onClick={(e) => e.stopPropagation()} style={{
+            width: 760, maxWidth:'95%', background:'#fff', borderRadius:8, padding:20, boxShadow:'0 6px 24px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{display:'flex', gap:20}}>
+              <img src={selectedProduct.images[0]} alt={selectedProduct.name} style={{width:260, height:260, objectFit:'cover', borderRadius:6}} />
+              <div style={{flex:1}}>
+                <h2 style={{marginTop:0}}>{selectedProduct.name}</h2>
+                <div style={{fontSize:'1.05rem', color:'#333', marginBottom:8}}>₹{selectedProduct.price}</div>
+                <div style={{marginBottom:12, display:'flex', alignItems:'center', gap:12}}>
+                  <div style={{display:'flex', alignItems:'center', gap:6}}>
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} style={{color: averageRating(selectedProduct.id) >= s ? '#f5b301' : '#ddd', fontSize:18}}>
+                        {averageRating(selectedProduct.id) >= s ? '★' : '☆'}
+                      </span>
+                    ))}
+                    <span style={{color:'#555'}}>({(reviews[selectedProduct.id] || []).length})</span>
+                  </div>
+                  <div>
+                    <button className="add-to-cart-btn buy-now" onClick={() => handleBuyNow(selectedProduct)}>Buy Now</button>
+                    <button className="add-to-cart-btn add-to-cart" onClick={() => handleAddToCart(selectedProduct)} style={{marginLeft:8}}>
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+
+                <h4 style={{margin:'12px 0 6px'}}>Customer Reviews</h4>
+                <div style={{maxHeight:320, overflow:'auto', paddingRight:8}}>
+                  {((reviews[selectedProduct.id] || []).slice().reverse().length === 0) ? (
+                    <div style={{color:'#666'}}>No reviews yet. Be the first to review.</div>
+                  ) : (
+                    (reviews[selectedProduct.id] || []).slice().reverse().map((r, i) => (
+                      <div key={i} style={{padding:'10px 0', borderBottom:'1px solid #f0f0f0'}}>
+                        <div style={{fontSize:'0.95rem', color:'#f5b301'}}>{'★'.repeat(r.rating)}{'☆'.repeat(5-(r.rating||0))}</div>
+                        <div style={{color:'#333', marginTop:6}}>{r.text}</div>
+                        <div style={{fontSize:'0.75rem', color:'#888', marginTop:6}}>{new Date(r.at).toLocaleString()}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <form style={{marginTop:12}} onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const rating = Number(fd.get('rating')) || 5;
+                  const text = String(fd.get('text') || '').trim();
+                  if (!text) return;
+                  addReview(selectedProduct.id, rating, text);
+                  e.currentTarget.reset();
+                }}>
+                  <div style={{display:'flex', gap:8, alignItems:'center', marginTop:8}}>
+                    <select name="rating" defaultValue={5} style={{padding:'6px', borderRadius:6}}>
+                      {[5,4,3,2,1].map(r => <option key={r} value={r}>{r} ★</option>)}
+                    </select>
+                    <input name="text" placeholder="Write a review..." style={{flex:1, padding:8, borderRadius:6, border:'1px solid #eee'}} />
+                    <button type="submit" className="add-to-cart-btn" style={{marginLeft:8}}>Submit</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <button onClick={() => setModalOpen(false)} style={{position:'absolute', right:14, top:12, border:'none', background:'transparent', fontSize:20, cursor:'pointer'}}>×</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

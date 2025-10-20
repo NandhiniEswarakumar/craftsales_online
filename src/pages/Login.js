@@ -110,42 +110,8 @@ const Login = ({ setUser }) => {
 
       {message && <p>{message}</p>}
 
-      {/* Display login history in a table (if available) */}
-      {loginHistory.length > 0 && (
-        <div className="login-history">
-          <h3>Login History</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Login Time</th>
-                <th>Logout Time</th>
-                <th>Duration</th>
-                <th>IP Address</th>
-                <th>Login Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loginHistory.map(user =>
-                user.loginHistory.map((log, idx) => (
-                  <tr key={`${user._id}-${idx}`}>
-                    <td>{user.username}</td>
-                    <td>{user.email}</td>
-                    <td>{log.loginAt ? new Date(log.loginAt).toLocaleString() : '-'}</td>
-                    <td>{log.logoutAt ? new Date(log.logoutAt).toLocaleString() : 'Active'}</td>
-                    <td>
-                      {log.sessionDuration ? `${log.sessionDuration}m` : '-'}
-                    </td>
-                    <td>{log.ipAddress || '-'}</td>
-                    <td>{user.loginCount || 0}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Removed login history table */}
+      
     </div>
   );
 };

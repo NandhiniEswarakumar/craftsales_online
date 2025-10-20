@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Cart.css';
+import resolveImageUrl from '../utils/imageUtils';
+
 
 const Cart = ({ cartItems, onUpdateQuantity, onRemoveItem }) => {
   const navigate = useNavigate();
@@ -209,27 +211,28 @@ const Cart = ({ cartItems, onUpdateQuantity, onRemoveItem }) => {
       ) : (
         <div className="cart-items">
           {cartItems.map(item => (
-            <div className="cart-item" key={item.id}>
+            <div key={item._id || item.id} className="cart-item">
               <img
-                src={item.image}
-                alt={item.name || item.title}
+                src={resolveImageUrl(item.image)}
+                alt={item.title || item.name}
                 className="cart-item__image"
+                onError={(e) => { e.currentTarget.src = `${process.env.PUBLIC_URL}/fallback.png`; }}
               />
               <div className="cart-item__info">
                 <h3>{item.title || item.name}</h3>
                 <p>₹{item.price.toFixed(2)}</p>
                 <div className="cart-item__controls">
                   <button 
-                    onClick={() => onUpdateQuantity(item.id, item.quantity - 1)} 
+                    onClick={() => onUpdateQuantity(item.id || item._id, item.quantity - 1)} 
                     disabled={item.quantity === 1}
                   >
                     -
                   </button>
                   <span>{item.quantity}</span>
-                  <button onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}>+</button>
+                  <button onClick={() => onUpdateQuantity(item.id || item._id, item.quantity + 1)}>+</button>
                   <button 
                     className="cart-item__remove" 
-                    onClick={() => onRemoveItem(item.id)}
+                    onClick={() => onRemoveItem(item.id || item._id)}
                   >
                     Remove
                   </button>

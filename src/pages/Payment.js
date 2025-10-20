@@ -49,7 +49,7 @@ function Payment() {
     });
     if (form.amount) params.set('am', String(form.amount));
     return `upi://pay?${params.toString()}`;
-  }, [form.amount]);
+  }, [form.amount, UPI_ID, UPI_NAME]);
 
   async function handleRazorpay() {
     const ok = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
