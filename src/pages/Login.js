@@ -11,7 +11,6 @@ const Login = ({ setUser }) => {
   const [showForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [loginHistory, setLoginHistory] = useState([]); // Added state for login history
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
