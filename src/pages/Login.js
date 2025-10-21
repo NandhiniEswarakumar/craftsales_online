@@ -48,16 +48,6 @@ const Login = ({ setUser }) => {
     setMessage(data.message);
   };
 
-  // Fetch login history (assuming an API endpoint exists)
-  const fetchLoginHistory = async () => {
-    try {
-      const res = await axios.get('http://localhost:5001/api/login-history');
-      setLoginHistory(res.data);
-    } catch (err) {
-      console.error('Error fetching login history:', err);
-    }
-  };
-
   return (
     <div className="login-page">
       <h2>Login</h2>
