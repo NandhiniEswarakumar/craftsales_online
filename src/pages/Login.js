@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/apiClient';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
@@ -19,7 +19,7 @@ const Login = ({ setUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5001/api/login', { 
+      const res = await api.post('/api/login', { 
         email: form.email, 
         password: form.password 
       });
@@ -39,7 +39,7 @@ const Login = ({ setUser }) => {
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5001/api/forgot-password', {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || ''}/api/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: forgotEmail }),

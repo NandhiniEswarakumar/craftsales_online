@@ -1,4 +1,4 @@
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5001';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || '';
 
 export function resolveImageUrl(imgPath) {
   if (!imgPath) return `${process.env.PUBLIC_URL}/fallback.png`;

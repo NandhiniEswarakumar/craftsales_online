@@ -13,6 +13,22 @@ const crypto = require('crypto');
 const multer = require('multer');
 const path = require('path');
 
+// Load environment variables from backend/config.env or backend/.env when running locally
+try {
+  // require dotenv only when available to avoid crashing in environments where it's not installed
+  // This will load config from 'config.env' for backwards compatibility, or '.env' otherwise.
+  // eslint-disable-next-line global-require
+  const dotenv = require('dotenv');
+  const envPath = require('fs').existsSync(path.join(__dirname, 'config.env'))
+    ? path.join(__dirname, 'config.env')
+    : path.join(__dirname, '.env');
+  dotenv.config({ path: envPath });
+  console.log('Loaded environment variables from', envPath);
+} catch (err) {
+  // If dotenv is not installed in the environment (e.g., production platform sets env vars), continue.
+  console.log('dotenv not loaded (may be running in production where environment variables are provided)');
+}
+
 // Define PORT
 const PORT = process.env.PORT || 5001;
 
@@ -93,7 +109,8 @@ app.post('/api/signup', async (req, res) => {
         secure: false,
       });
 
-      const verificationUrl = `http://localhost:3001/verify-email/${verificationToken}`;
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+      const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
       console.log('Verification URL:', verificationUrl);
       
       const mailOptions = {
@@ -318,7 +335,8 @@ app.post('/api/resend-verification', async (req, res) => {
       secure: false,
     });
 
-    const verificationUrl = `http://localhost:3001/verify-email/${verificationToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
     const mailOptions = {
       to: user.email,
       subject: 'Verify Your Email - Craft Sales',
@@ -375,7 +393,8 @@ app.post('/api/forgot-password', async (req, res) => {
       secure: false, // use TLS
     });
 
-    const resetUrl = `http://localhost:3001/reset-password/${token}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const resetUrl = `${frontendUrl}/reset-password/${token}`;
     const mailOptions = {
       to: user.email,
       subject: 'Password Reset',

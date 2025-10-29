@@ -5,7 +5,7 @@ import productNames from '../data/productNames';
 import resolveImageUrl from '../utils/imageUtils';
 
   // Set the base URL for axios
-  const API_BASE = 'http://localhost:5001';
+  const API_BASE = process.env.REACT_APP_API_BASE_URL || '';
 
   const Seller = ({ user }) => {
     const [activeTab, setActiveTab] = useState('dashboard');

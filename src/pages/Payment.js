@@ -59,7 +59,7 @@ function Payment() {
     }
 
     try {
-      const res = await fetch('http://localhost:5001/api/pay/create-order', {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || ''}/api/pay/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: Math.max(1, parseInt(form.amount || 1, 10)) })

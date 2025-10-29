@@ -19,7 +19,7 @@ import Admin from './pages/Admin';
 import Seller from './pages/Seller';
 
 const USER_STORAGE_KEY = "crafthub_user";
-const API_BASE = 'http://localhost:5001';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || '';
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
