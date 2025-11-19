@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Cart.css';
 import resolveImageUrl from '../utils/imageUtils';
@@ -11,21 +11,17 @@ const Cart = ({ cartItems, onUpdateQuantity, onRemoveItem }) => {
   const [showQRPayment, setShowQRPayment] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
 
-  const savedIds = useMemo(() => new Set(JSON.parse(localStorage.getItem('savedForLater') || '[]')), []);
-  const savedItems = useMemo(() => {
-    const map = JSON.parse(localStorage.getItem('savedItemsData') || '{}');
-    return Array.from(savedIds).map((id) => map[id]).filter(Boolean);
-  }, [savedIds]);
+  
 
   const getTotal = () =>
     cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const getSavedTotal = () =>
-    savedItems.reduce((sum, item) => sum + item.price, 0);
+  // saved-items feature removed per user request; saved total not applicable
 
   // Unique feature: Smart Saver discount - the more you saved, the higher the unlock
   // 1+ saved = 5%, 3+ saved = 10%, 5+ saved = 12%
-  const smartDiscountRate = savedItems.length >= 5 ? 0.12 : savedItems.length >= 3 ? 0.10 : savedItems.length >= 1 ? 0.05 : 0;
+  // Smart saver feature disabled when saved-for-later is removed
+  const smartDiscountRate = 0;
   const [applySmartDiscount, setApplySmartDiscount] = useState(true);
   const getFinalTotal = () => {
     const subtotal = getTotal();
@@ -270,31 +266,7 @@ const Cart = ({ cartItems, onUpdateQuantity, onRemoveItem }) => {
                 <strong>Total: ₹{getFinalTotal().toFixed(2)}</strong>
               </div>
             </div>
-            <div className="cart-total" style={{marginTop:'16px'}}>
-              <h3>Saved for later</h3>
-              {savedItems.length === 0 ? (
-                <div className="summary-line">No items saved.</div>
-              ) : (
-                <div>
-                  {savedItems.map(si => (
-                    <div key={si.id} style={{display:'flex', alignItems:'center', gap:10, margin:'8px 0'}}>
-                      <img src={si.image} alt={si.name} style={{width:48, height:48, objectFit:'cover', borderRadius:6}} />
-                      <div style={{flex:1}}>
-                        <div style={{fontWeight:600}}>{si.name}</div>
-                        <div>₹{Number(si.price).toFixed(2)}</div>
-                      </div>
-                      <button className="go-back-btn" onClick={() => {
-                        // Move to cart quick action
-                        navigate('/products');
-                      }}>Buy</button>
-                    </div>
-                  ))}
-                  <div className="summary-line total-line" style={{marginTop:8}}>
-                    <strong>Saved value: ₹{getSavedTotal().toFixed(2)}</strong>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Saved-for-later section removed per user request */}
           </div>
         </div>
       )}

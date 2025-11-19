@@ -46,7 +46,7 @@ const Signup = () => {
         address: form.address,
         password: form.password
       };
-  const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || ''}/api/signup`, {
+  const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
