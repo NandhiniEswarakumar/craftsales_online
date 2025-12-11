@@ -24,9 +24,19 @@ const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
 function App() {
   const [cartItems, setCartItems] = useState([]);
   const [user, setUser] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Use the real user ID if logged in, otherwise undefined
   const userId = user?.id; // backend returns `id`
+  const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+
+  const closeAllPanels = () => {
+    setIsMenuOpen(false);
+    setIsProfileOpen(false);
+    setIsCartOpen(false);
+  };
 
   // Hydrate user from localStorage on app start
   useEffect(() => {
@@ -126,6 +136,7 @@ function App() {
     setUser(null);
     setCartItems([]);
     localStorage.removeItem(USER_STORAGE_KEY);
+    closeAllPanels();
   };
 
   useEffect(() => {
@@ -151,30 +162,29 @@ function App() {
               <h1>🎨 CraftHub</h1>
               <p>Handmade with Love</p>
             </div>
-            <nav className="nav-menu">
-              <nav className="nav-menu">
-                  <Link className="nav-link" to="/">Home</Link>
-                  <Link className="nav-link" to="/About">About</Link>
-                  <Link className="nav-link" to="/products">Products</Link>
-                  <Link className="nav-link" to="/cart">Cart</Link>
-                  <Link className="nav-link" to="/contact">Contact</Link>
-                  
-                  {/* Admin Panel Link - Only for admin@gmail.com */}
-                  {user?.email === 'admin@gmail.com' && (
-                    <Link className="nav-link admin-nav-link" to="/admin" style={{backgroundColor: '#ff6b35', color: 'white', padding: '8px 16px', borderRadius: '4px', marginLeft: '10px'}}>
-                      Admin Panel
-                    </Link>
-                  )}
-                  
-                  {/* Seller Dashboard Link - Only for seller@gmail.com */}
-                  {user?.email === 'seller@gmail.com' && (
-                    <Link className="nav-link seller-nav-link" to="/Seller" style={{backgroundColor: '#28a745', color: 'white', padding: '8px 16px', borderRadius: '4px', marginLeft: '10px'}}>
-                      Seller Dashboard
-                    </Link>
-                  )}
-              </nav>
+            <nav className="nav-menu desktop-nav">
+              <Link className="nav-link" to="/" onClick={closeAllPanels}>Home</Link>
+              <Link className="nav-link" to="/About" onClick={closeAllPanels}>About</Link>
+              <Link className="nav-link" to="/products" onClick={closeAllPanels}>Products</Link>
+              <Link className="nav-link" to="/cart" onClick={closeAllPanels}>Cart</Link>
+              <Link className="nav-link" to="/contact" onClick={closeAllPanels}>Contact</Link>
+              
+              {/* Admin Panel Link - Only for admin@gmail.com */}
+              {user?.email === 'admin@gmail.com' && (
+                <Link className="nav-link admin-nav-link" to="/admin" onClick={closeAllPanels} style={{backgroundColor: '#ff6b35', color: 'white', padding: '8px 16px', borderRadius: '4px', marginLeft: '10px'}}>
+                  Admin Panel
+                </Link>
+              )}
+              
+              {/* Seller Dashboard Link - Only for seller@gmail.com */}
+              {user?.email === 'seller@gmail.com' && (
+                <Link className="nav-link seller-nav-link" to="/Seller" onClick={closeAllPanels} style={{backgroundColor: '#28a745', color: 'white', padding: '8px 16px', borderRadius: '4px', marginLeft: '10px'}}>
+                  Seller Dashboard
+                </Link>
+              )}
             </nav>
-            <div className="auth-buttons">
+
+            <div className="auth-buttons desktop-auth">
               {user ? (
                 <>
                 <span className="welcome-msg">
@@ -184,15 +194,83 @@ function App() {
                 </>
               ) : (
                 <>
-                  <Link className="login-btn" to="/login">
+                  <Link className="login-btn" to="/login" onClick={closeAllPanels}>
                     Login
                   </Link>
-                  <Link className="signup-btn" to="/signup">
+                  <Link className="signup-btn" to="/signup" onClick={closeAllPanels}>
                     Sign Up
                   </Link>
                 </>
               )}
             </div>
+
+            <div className="mobile-nav">
+              <button
+                className="icon-btn"
+                aria-label="Cart"
+                onClick={() => {
+                  setIsCartOpen((prev) => !prev);
+                  setIsProfileOpen(false);
+                  setIsMenuOpen(false);
+                }}
+              >
+                <span className="icon">🛒</span>
+                {cartCount > 0 && <span className="badge">{cartCount}</span>}
+              </button>
+
+              <button
+                className="icon-btn"
+                aria-label="Profile"
+                onClick={() => {
+                  setIsProfileOpen((prev) => !prev);
+                  setIsCartOpen(false);
+                  setIsMenuOpen(false);
+                }}
+              >
+                <span className="icon">👤</span>
+              </button>
+
+              <button
+                className="icon-btn"
+                aria-label="Menu"
+                onClick={() => {
+                  setIsMenuOpen((prev) => !prev);
+                  setIsCartOpen(false);
+                  setIsProfileOpen(false);
+                }}
+              >
+                <span className="icon">☰</span>
+              </button>
+            </div>
+
+            {isCartOpen && (
+              <div className="mobile-panel cart-panel">
+                <div className="panel-row">
+                  <span>Items in cart</span>
+                  <span className="badge badge-solid">{cartCount}</span>
+                </div>
+                <Link to="/cart" className="panel-link" onClick={closeAllPanels}>View Cart</Link>
+              </div>
+            )}
+
+            {isProfileOpen && (
+              <div className="mobile-panel profile-panel">
+                <Link to={user ? '/cart' : '/login'} className="panel-link" onClick={closeAllPanels}>
+                  My Account
+                </Link>
+                <Link to="/signup" className="panel-link" onClick={closeAllPanels}>Sign Up</Link>
+                <Link to="/login" className="panel-link" onClick={closeAllPanels}>Login</Link>
+              </div>
+            )}
+
+            {isMenuOpen && (
+              <div className="mobile-panel menu-panel">
+                <Link to="/" className="panel-link" onClick={closeAllPanels}>Home</Link>
+                <Link to="/About" className="panel-link" onClick={closeAllPanels}>About</Link>
+                <Link to="/products" className="panel-link" onClick={closeAllPanels}>Products</Link>
+                <Link to="/contact" className="panel-link" onClick={closeAllPanels}>Contact</Link>
+              </div>
+            )}
           </div>
         </header>
         <main>
@@ -240,6 +318,7 @@ function App() {
 
           </Routes>
         </main>
+        <Link to="/" className="back-home-fab" aria-label="Back to Home">🏠</Link>
         {/* Footer */}
         <footer className="homepage-footer">
           <div className="container">

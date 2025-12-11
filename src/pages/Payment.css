@@ -1,6 +1,6 @@
 .payment-container {
-  max-width: 400px;
-  margin: 40px auto;
+  width: min(100%, 480px);
+  margin: 32px auto;
   background: #fff7f0;
   padding: 2rem 2.5rem;
   border-radius: 16px;
@@ -57,4 +57,26 @@
 
 .place-order-btn:hover {
   background: #7a3e1d;
+}
+
+@media (max-width: 640px) {
+  .payment-container {
+    margin: 16px;
+    padding: 1.5rem 1.25rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+
+  .payment-form {
+    gap: 1rem;
+  }
+
+  .payment-form input,
+  .payment-form textarea,
+  .payment-form select {
+    font-size: 0.98rem;
+  }
+
+  .place-order-btn {
+    width: 100%;
+  }
 }
