@@ -34,7 +34,11 @@ const PORT = process.env.PORT || 5001;
 
 // Create express app and basic middleware (ensure these are defined before using `app`)
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: "https://craftsales-online-hsld.vercel.app",
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -44,12 +48,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads/images', express.static(path.join(__dirname, 'uploads', 'images')));
 
 // MongoDB Connection
-mongoose.connect(
-  process.env.MONGODB_URI ||
-  "mongodb+srv://database:user@01@cluster0.fvqtqer.mongodb.net/craftsale?retryWrites=true&w=majority&appName=Cluster0"
-)
-  .then(() => console.log("Connected to MongoDB successfully!"))
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Atlas connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
+
 
 
 // Import User model
