@@ -13,7 +13,7 @@ const Contact = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-  await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/contact`, form);
+  await axios.post(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/contact`, form);
       setStatus('Message sent!');
       setForm({ name: '', email: '', message: '' });
     } catch {

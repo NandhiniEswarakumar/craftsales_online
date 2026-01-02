@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './VerifyEmail.css';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com';
 
 const VerifyCode = () => {
   const location = useLocation();
@@ -75,11 +75,14 @@ const VerifyCode = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
             required
+            autoComplete="email"
           />
 
           <label>Verification Code</label>
           <input
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="123456"
@@ -87,22 +90,23 @@ const VerifyCode = () => {
             required
           />
 
-          <button type="submit" disabled={status === 'verifying'}>
+          <button type="submit" className="verify-email__primary" disabled={status === 'verifying'}>
             {status === 'verifying' ? 'Verifying...' : 'Verify'}
           </button>
         </form>
 
-        <button className="verify-email__button" onClick={handleResend} disabled={status === 'resending'}>
-          {status === 'resending' ? 'Sending...' : 'Resend Code'}
-        </button>
+        <div className="verify-email__actions">
+          <button className="verify-email__button" onClick={handleResend} disabled={status === 'resending'}>
+            {status === 'resending' ? 'Sending...' : 'Resend Code'}
+          </button>
+          <button className="verify-email__button secondary" onClick={() => navigate('/login')}>
+            Back to Login
+          </button>
+        </div>
 
         {message && (
-          <p style={{ marginTop: '1rem', color: status === 'error' ? 'red' : '#333' }}>{message}</p>
+          <p className={`verify-email__message ${status === 'error' ? 'is-error' : 'is-info'}`}>{message}</p>
         )}
-
-        <button className="verify-email__button" onClick={() => navigate('/login')} style={{ marginTop: '1rem' }}>
-          Back to Login
-        </button>
       </div>
     </div>
   );

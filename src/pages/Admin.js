@@ -33,7 +33,7 @@ const AdminPanel = () => {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/admin/dashboard-stats`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/admin/dashboard-stats`, {
         headers: { 'x-admin-password': adminPassword }
       });
       if (res.ok) {
@@ -59,7 +59,7 @@ const AdminPanel = () => {
       });
       
       
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/admin/users?${params}`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/admin/users?${params}`, {
         headers: { 'x-admin-password': adminPassword }
       });
       
@@ -80,7 +80,7 @@ const AdminPanel = () => {
   const loadLoginHistory = async () => {
     setLoading(true);
     try {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/admin/user-logins`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/admin/user-logins`, {
         headers: { 'x-admin-password': adminPassword }
       });
       if (res.ok) {
@@ -116,7 +116,7 @@ const AdminPanel = () => {
 
   const toggleAdminStatus = async (userId) => {
     try {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/admin/user/${userId}/toggle-admin`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/admin/user/${userId}/toggle-admin`, {
         method: 'PATCH',
         headers: { 
           'x-admin-password': adminPassword,
@@ -136,7 +136,7 @@ const AdminPanel = () => {
 
   const verifyUserEmail = async (userId) => {
     try {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/admin/user/${userId}/verify-email`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/admin/user/${userId}/verify-email`, {
         method: 'PATCH',
         headers: { 
           'x-admin-password': adminPassword,
@@ -159,7 +159,7 @@ const AdminPanel = () => {
 
   const resendVerificationEmail = async (userId, userEmail) => {
     try {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/resend-verification`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/resend-verification`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'
@@ -181,7 +181,7 @@ const AdminPanel = () => {
   const deleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001'}/api/admin/user/${userId}`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/admin/user/${userId}`, {
           method: 'DELETE',
           headers: { 'x-admin-password': adminPassword }
         });
