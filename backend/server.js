@@ -402,7 +402,7 @@ app.post('/api/forgot-password', async (req, res) => {
       secure: false, // use TLS
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://craftsales-online-hsld.vercel.app';
     const resetUrl = `${frontendUrl}/reset-password/${token}`;
     const mailOptions = {
       to: user.email,
