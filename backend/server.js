@@ -83,9 +83,9 @@ app.post('/api/signup', async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Generate 6-digit email verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Create new user
     const newUser = new User({
@@ -94,66 +94,59 @@ app.post('/api/signup', async (req, res) => {
       mobile,
       address,
       password: hashedPassword,
-      emailVerificationToken: verificationToken,
-      emailVerificationExpires: verificationExpires
+      verificationCode,
+      verificationCodeExpires: verificationExpires
     });
 
     await newUser.save();
 
-    // Send verification email
-    try {
-      console.log('Attempting to send verification email to:', newUser.email);
-      console.log('Email config - User:', process.env.EMAIL_USER);
-      
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        port: 587,
-        secure: false,
-      });
+    // Send verification email in background (non-blocking)
+    setImmediate(async () => {
+      try {
+        console.log('Attempting to send verification email to:', newUser.email);
+        console.log('Email config - User:', process.env.EMAIL_USER);
+        
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+          port: 587,
+          secure: false,
+        });
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-      const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
-      console.log('Verification URL:', verificationUrl);
-      
-      const mailOptions = {
-        to: newUser.email,
-        subject: 'Verify Your Email - Craft Sales',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #333;">Welcome to Craft Sales!</h2>
-            <p>Hi ${newUser.username},</p>
-            <p>Thank you for signing up! Please verify your email address by clicking the button below:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${verificationUrl}" 
-                 style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                Verify Email Address
-              </a>
+        const mailOptions = {
+          to: newUser.email,
+          subject: 'Your Craft Sales verification code',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #333;">Welcome to Craft Sales!</h2>
+              <p>Hi ${newUser.username},</p>
+              <p>Your verification code is:</p>
+              <div style="text-align: center; margin: 24px 0; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #667eea;">
+                ${verificationCode}
+              </div>
+              <p>This code will expire in 15 minutes.</p>
+              <p>If you didn't create an account, you can ignore this email.</p>
             </div>
-            <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-            <p>This link will expire in 24 hours.</p>
-            <p>If you didn't create an account, please ignore this email.</p>
-          </div>
-        `
-      };
+          `
+        };
 
-      const emailResult = await transporter.sendMail(mailOptions);
-      console.log('Verification email sent successfully to:', newUser.email);
-      console.log('Email result:', emailResult.messageId);
-    } catch (emailError) {
-      console.error('Error sending verification email:', emailError);
-      console.error('Email error details:', emailError.message);
-      // Don't fail signup if email fails
-    }
+        const emailResult = await transporter.sendMail(mailOptions);
+        console.log('Verification email sent successfully to:', newUser.email);
+        console.log('Email result:', emailResult.messageId);
+      } catch (emailError) {
+        console.error('Error sending verification email:', emailError);
+        console.error('Email error details:', emailError.message);
+      }
+    });
 
     console.log('User created successfully:', newUser.email);
     res.status(201).json({ 
-      message: 'User created successfully. Please check your email to verify your account.',
-      requiresVerification: true
+      message: 'User created successfully. Enter the verification code sent to your email to activate your account.',
+      requiresVerification: true,
+      email: newUser.email
     });
   } catch (error) {
     // Improved error logging
@@ -195,6 +188,10 @@ app.post('/api/login', async (req, res) => {
     if (!isPasswordValid) {
       console.log('Login error: Invalid password');
       return res.status(400).json({ message: 'Invalid password' });
+    }
+
+    if (!user.isEmailVerified) {
+      return res.status(403).json({ message: 'Please verify your email with the 6-digit code we sent before logging in.' });
     }
 
     // Track login information
@@ -283,22 +280,35 @@ app.post('/api/reset-password/:token', async (req, res) => {
   res.json({ message: "Password has been reset successfully." });
 });
 
-// Email verification endpoint
-app.get('/api/verify-email/:token', async (req, res) => {
+// Email verification via code
+app.post('/api/verify-code', async (req, res) => {
   try {
-    const { token } = req.params;
-    const user = await User.findOne({
-      emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() }
-    });
+    const { email, code } = req.body;
 
+    const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ message: 'Email already verified' });
+    }
+
+    if (!user.verificationCode || !user.verificationCodeExpires) {
+      return res.status(400).json({ message: 'No verification code found. Please request a new one.' });
+    }
+
+    if (user.verificationCodeExpires < Date.now()) {
+      return res.status(400).json({ message: 'Verification code expired. Please request a new one.' });
+    }
+
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ message: 'Invalid verification code' });
     }
 
     user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpires = undefined;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
     await user.save();
 
     res.json({ message: 'Email verified successfully' });
@@ -322,12 +332,12 @@ app.post('/api/resend-verification', async (req, res) => {
       return res.status(400).json({ message: 'Email already verified' });
     }
 
-    // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Generate new code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    user.emailVerificationToken = verificationToken;
-    user.emailVerificationExpires = verificationExpires;
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpires = verificationExpires;
     await user.save();
 
     // Send verification email
@@ -341,32 +351,25 @@ app.post('/api/resend-verification', async (req, res) => {
       secure: false,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-    const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
     const mailOptions = {
       to: user.email,
-      subject: 'Verify Your Email - Craft Sales',
+      subject: 'Your Craft Sales verification code',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Verify Your Email - Craft Sales</h2>
           <p>Hi ${user.username},</p>
-          <p>Please verify your email address by clicking the button below:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
-               style="background-color: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Verify Email Address
-            </a>
+          <p>Your verification code is:</p>
+          <div style="text-align: center; margin: 24px 0; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #667eea;">
+            ${verificationCode}
           </div>
-          <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-          <p>This link will expire in 24 hours.</p>
+          <p>This code will expire in 15 minutes.</p>
           <p>If you didn't request this, please ignore this email.</p>
         </div>
       `
     };
 
     await transporter.sendMail(mailOptions);
-    res.json({ message: 'Verification email sent successfully' });
+    res.json({ message: 'Verification code sent' });
   } catch (error) {
     console.error('Resend verification error:', error);
     res.status(500).json({ message: 'Error sending verification email' });

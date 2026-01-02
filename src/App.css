@@ -1,11 +1,22 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
+  width: 100%;
   font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   min-height: 100vh;
   color: #7b5e57;
   background: linear-gradient(120deg, #f8f4f0 0%, #ffe0c3 50%, #e7bba3 100%);
   background-size: 200% 200%;
   animation: bgMove 8s ease-in-out infinite alternate;
+  overflow-x: hidden;
 }
 
 @keyframes bgMove {

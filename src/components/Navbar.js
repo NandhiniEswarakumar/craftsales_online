@@ -46,20 +46,24 @@ const Navbar = ({ user }) => {
           </NavLink>
         </li>
         <li>
-          <NavLink to="/signup" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>
-            Login
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/login" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>
-            Signup
-          </NavLink>
-        </li>
-        <li>
           <NavLink to="/contact" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>
             Contact
           </NavLink>
         </li>
+        {!user && (
+          <>
+            <li>
+              <NavLink to="/login" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>
+                Login
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/signup" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>
+                Signup
+              </NavLink>
+            </li>
+          </>
+        )}
         {user?.isAdmin && (
           <li>
             <NavLink to="/admin" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"} onClick={closeMenu}>

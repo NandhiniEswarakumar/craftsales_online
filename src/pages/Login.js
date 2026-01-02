@@ -33,7 +33,8 @@ const Login = ({ setUser }) => {
         navigate('/');
       }
     } catch (err) {
-      setError('Invalid credentials');
+      const msg = err?.response?.data?.message || 'Invalid credentials';
+      setError(msg);
     }
   };
 
@@ -82,6 +83,10 @@ const Login = ({ setUser }) => {
       >
         Forgot Password?
       </button>
+
+      <div style={{textAlign: 'center', marginTop: '1rem', fontSize: '0.95rem'}}>
+        Don't have an account? <button onClick={() => navigate('/signup')} style={{background: 'none', border: 'none', color: '#7b5e57', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.95rem'}}>Sign up here</button>
+      </div>
 
       {showForgot && (
         <form onSubmit={handleForgotPassword}>

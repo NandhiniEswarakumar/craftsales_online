@@ -13,13 +13,17 @@ import Contact from './pages/Contact';
 import Payment from './pages/Payment';
 import OrderConform from './pages/OrderConform';
 import VerifyEmail from './pages/VerifyEmail';
+import VerifyCode from './pages/VerifyCode';
 import axios from 'axios';
 import './App.css';
 import Admin from './pages/Admin';
 import Seller from './pages/Seller';
 
 const USER_STORAGE_KEY = "crafthub_user";
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+const API_BASE =
+  process.env.REACT_APP_API_BASE_URL ||
+  "https://craftsales-online.onrender.com";
+
 
 function App() {
   const [cartItems, setCartItems] = useState([]);
@@ -255,11 +259,33 @@ function App() {
 
             {isProfileOpen && (
               <div className="mobile-panel profile-panel">
-                <Link to={user ? '/cart' : '/login'} className="panel-link" onClick={closeAllPanels}>
-                  My Account
-                </Link>
-                <Link to="/signup" className="panel-link" onClick={closeAllPanels}>Sign Up</Link>
-                <Link to="/login" className="panel-link" onClick={closeAllPanels}>Login</Link>
+                {user ? (
+                  <>
+                    <div className="panel-row" style={{ justifyContent: 'space-between' }}>
+                      <span>Welcome</span>
+                      <span className="badge badge-solid">{user.username}</span>
+                    </div>
+                    <Link to="/cart" className="panel-link" onClick={closeAllPanels}>My Account</Link>
+                    {user.email === 'admin@gmail.com' && (
+                      <Link to="/admin" className="panel-link" onClick={closeAllPanels}>Admin Panel</Link>
+                    )}
+                    {user.email === 'seller@gmail.com' && (
+                      <Link to="/Seller" className="panel-link" onClick={closeAllPanels}>Seller Dashboard</Link>
+                    )}
+                    <button
+                      className="panel-link"
+                      style={{ textAlign: 'left', background: 'none', border: 'none', padding: 0, color: 'inherit' }}
+                      onClick={() => { closeAllPanels(); handleLogout(); }}
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/signup" className="panel-link" onClick={closeAllPanels}>Sign Up</Link>
+                    <Link to="/login" className="panel-link" onClick={closeAllPanels}>Login</Link>
+                  </>
+                )}
               </div>
             )}
 
@@ -283,6 +309,7 @@ function App() {
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/verify-code" element={<VerifyCode />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/payment" element={<Payment />} />

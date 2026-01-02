@@ -8,7 +8,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   isAdmin: { type: Boolean, default: false },
   isSeller: { type: Boolean, default: false }, // Add seller role
-  emailVerified: { type: Boolean, default: false },
+  isEmailVerified: { type: Boolean, default: false },
+  verificationCode: { type: String },
+  verificationCodeExpires: { type: Date },
   isActive: { type: Boolean, default: true },
   loginHistory: [{
     loginAt: { type: Date, default: Date.now },

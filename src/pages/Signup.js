@@ -53,8 +53,8 @@ const Signup = () => {
       });
       
       if (response.ok) {
-        alert('Signup successful! Please check your email and click the verification link to activate your account. You can then login with your credentials.');
-        navigate('/login');
+        alert('Signup successful! Enter the 6-digit verification code we just emailed you.');
+        navigate('/verify-code', { state: { email: form.email } });
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Signup failed. Please try again.');
@@ -96,6 +96,9 @@ const Signup = () => {
           Sign up with Google
         </button>
       </form>
+      <div style={{textAlign: 'center', marginTop: '1rem', fontSize: '0.95rem'}}>
+        Already have an account? <button onClick={() => navigate('/login')} style={{background: 'none', border: 'none', color: '#7b5e57', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.95rem'}}>Continue to Login</button>
+      </div>
     </div>
   );
 };
