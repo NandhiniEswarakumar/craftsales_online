@@ -57,6 +57,53 @@ mongoose.connect(process.env.MONGO_URI)
 // Import User model
 const User = require('./models/user');
 
+// Email helpers
+const ensureEmailConfig = () => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('Email credentials are missing. Set EMAIL_USER and EMAIL_PASS.');
+  }
+};
+
+const createEmailTransporter = () => {
+  ensureEmailConfig();
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
+    pool: true,
+  });
+};
+
+const sendVerificationEmail = async (email, username, verificationCode) => {
+  const transporter = createEmailTransporter();
+  const mailOptions = {
+    from: `CraftHub <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: 'Your Craft Sales verification code',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Welcome to Craft Sales!</h2>
+        <p>Hi ${username},</p>
+        <p>Your verification code is:</p>
+        <div style="text-align: center; margin: 24px 0; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #667eea;">
+          ${verificationCode}
+        </div>
+        <p>This code will expire in 15 minutes.</p>
+        <p>If you didn't create an account, you can ignore this email.</p>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 // Routes
 
 // Signup endpoint
@@ -100,47 +147,15 @@ app.post('/api/signup', async (req, res) => {
 
     await newUser.save();
 
-    // Send verification email in background (non-blocking)
-    setImmediate(async () => {
-      try {
-        console.log('Attempting to send verification email to:', newUser.email);
-        console.log('Email config - User:', process.env.EMAIL_USER);
-        
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-          port: 587,
-          secure: false,
-        });
-
-        const mailOptions = {
-          to: newUser.email,
-          subject: 'Your Craft Sales verification code',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #333;">Welcome to Craft Sales!</h2>
-              <p>Hi ${newUser.username},</p>
-              <p>Your verification code is:</p>
-              <div style="text-align: center; margin: 24px 0; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #667eea;">
-                ${verificationCode}
-              </div>
-              <p>This code will expire in 15 minutes.</p>
-              <p>If you didn't create an account, you can ignore this email.</p>
-            </div>
-          `
-        };
-
-        const emailResult = await transporter.sendMail(mailOptions);
-        console.log('Verification email sent successfully to:', newUser.email);
-        console.log('Email result:', emailResult.messageId);
-      } catch (emailError) {
-        console.error('Error sending verification email:', emailError);
-        console.error('Email error details:', emailError.message);
-      }
-    });
+    try {
+      console.log('Attempting to send verification email to:', newUser.email);
+      await sendVerificationEmail(newUser.email, newUser.username, verificationCode);
+      console.log('Verification email sent successfully to:', newUser.email);
+    } catch (emailError) {
+      console.error('Error sending verification email:', emailError);
+      console.error('Email error details:', emailError.message);
+      return res.status(500).json({ message: 'Account created but failed to send verification email. Please try resending the code.' });
+    }
 
     console.log('User created successfully:', newUser.email);
     res.status(201).json({ 
@@ -340,35 +355,7 @@ app.post('/api/resend-verification', async (req, res) => {
     user.verificationCodeExpires = verificationExpires;
     await user.save();
 
-    // Send verification email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      port: 587,
-      secure: false,
-    });
-
-    const mailOptions = {
-      to: user.email,
-      subject: 'Your Craft Sales verification code',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Verify Your Email - Craft Sales</h2>
-          <p>Hi ${user.username},</p>
-          <p>Your verification code is:</p>
-          <div style="text-align: center; margin: 24px 0; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #667eea;">
-            ${verificationCode}
-          </div>
-          <p>This code will expire in 15 minutes.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-        </div>
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
+    await sendVerificationEmail(user.email, user.username, verificationCode);
     res.json({ message: 'Verification code sent' });
   } catch (error) {
     console.error('Resend verification error:', error);
@@ -393,18 +380,23 @@ app.post('/api/forgot-password', async (req, res) => {
 
     // Configure nodemailer
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // use TLS
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
-      port: 587,
-      secure: false, // use TLS
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      pool: true,
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'https://craftsales-online-hsld.vercel.app';
     const resetUrl = `${frontendUrl}/reset-password/${token}`;
     const mailOptions = {
+      from: `CraftHub <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: 'Password Reset',
       text: `You requested a password reset. Click the link to reset your password: ${resetUrl}`,
