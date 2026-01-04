@@ -53,8 +53,7 @@ const Signup = () => {
       });
       
       if (response.ok) {
-        alert('Signup successful! Enter the 6-digit verification code we just emailed you.');
-        navigate('/verify-code', { state: { email: form.email } });
+        navigate('/login', { state: { email: form.email, justSignedUp: true } });
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Signup failed. Please try again.');

@@ -205,10 +205,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid password' });
     }
 
-    if (!user.isEmailVerified) {
-      return res.status(403).json({ message: 'Please verify your email with the 6-digit code we sent before logging in.' });
-    }
-
     // Track login information
     const loginTime = new Date();
     const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
@@ -232,7 +228,8 @@ app.post('/api/login', async (req, res) => {
       username: user.username,
       email: user.email,
       isAdmin: user.isAdmin,
-      isEmailVerified: user.isEmailVerified
+      isEmailVerified: user.isEmailVerified,
+      requiresVerification: !user.isEmailVerified
     });
   } catch (error) {
     console.error('Login error:', error);

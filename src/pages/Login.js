@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../utils/apiClient';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './Login.css';
+
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com';
 
 const Login = ({ setUser }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialEmail = location.state?.email || '';
+  const justSignedUp = Boolean(location.state?.justSignedUp);
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading] = useState(false);
   const [error, setError] = useState('');
   const [showForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [message, setMessage] = useState('');
+  const handleLoginClick = () => {
+    const formEl = document.getElementById('login-form');
+    if (formEl) formEl.requestSubmit();
+  };
+
+  useEffect(() => {
+    if (initialEmail) {
+      setForm((prev) => ({ ...prev, email: initialEmail }));
+    }
+  }, [initialEmail]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,6 +53,29 @@ const Login = ({ setUser }) => {
     }
   };
 
+  const handleSendVerification = async () => {
+    setError('');
+    if (!form.email) {
+      setError('Enter your email to receive the verification code.');
+      return;
+    }
+    setMessage('');
+    try {
+      const res = await fetch(`${API_BASE}/api/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Could not send verification email');
+      }
+      setMessage('Verification code sent. Check your email.');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleForgotPassword = async (e) => {
     e.preventDefault();
   const res = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://craftsales-online.onrender.com'}/api/forgot-password`, {
@@ -52,8 +90,14 @@ const Login = ({ setUser }) => {
   return (
     <div className="login-page">
       <h2>Login</h2>
+      {justSignedUp && (
+        <div className="info-message" style={{ color: '#8e5c00', background: '#fff5e6', padding: '10px', borderRadius: '6px', marginBottom: '12px', textAlign: 'center', border: '1px solid #ffd89c' }}>
+          Account created. Choose an option below: verify your email or continue to login.
+        </div>
+      )}
       {error && <div className="error-message" style={{color: 'red', marginBottom: '10px', textAlign: 'center'}}>{error}</div>}
-      <form className="login-form" onSubmit={handleSubmit}>
+      {message && !error && <div className="success-message" style={{color: '#1d8f3b', marginBottom: '10px', textAlign: 'center'}}>{message}</div>}
+      <form id="login-form" className="login-form" onSubmit={handleSubmit}>
         <label htmlFor="email">Email</label>
         <input type="email" id="email" name="email" placeholder="Enter your email" value={form.email} onChange={handleChange} required />
         <label htmlFor="password">Password</label>
@@ -67,6 +111,22 @@ const Login = ({ setUser }) => {
           Sign in with Google
         </button>
       </form>
+      <div style={{ display: 'flex', gap: '10px', marginTop: '12px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={handleSendVerification}
+          style={{ padding: '10px 12px', background: '#6c5ce7', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+        >
+          Verify email (send code)
+        </button>
+        <button
+          type="button"
+          onClick={handleLoginClick}
+          style={{ padding: '10px 12px', background: '#2d3436', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+        >
+          Continue to login
+        </button>
+      </div>
       <button
         type="button"
         onClick={() => navigate('/forgot-password')}
